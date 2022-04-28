@@ -1,0 +1,13 @@
+.footer {
+    font-size: .875rem;
+    background-color: white;
+}
+
+.footer a {
+    font-weight: 600;
+    color: #495057;
+}
+
+.main {
+	background-color: white;
+}

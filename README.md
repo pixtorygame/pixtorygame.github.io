@@ -1,1 +1,1 @@
-# pixtorygame.github.io
+Pixtory GitHub Pages

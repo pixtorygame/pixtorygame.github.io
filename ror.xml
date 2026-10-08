@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:ror="http://rorweb.com/0.1/" >
+<channel>
+  <title>ROR Sitemap for https://pixtorygame.github.io/</title>
+  <link>https://pixtorygame.github.io/</link>
+
+<item>
+     <link>https://pixtorygame.github.io/</link>
+     <title>Pixtory Game | Software Company</title>
+     <description>Pixtory Game | Software Company</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>0</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+<item>
+     <link>https://pixtorygame.github.io/videos.html</link>
+     <title>Pixtory Game | Game Videos</title>
+     <description>Pixtory Game | Game Videos</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>1</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+<item>
+     <link>https://pixtorygame.github.io/privacy-policy.html</link>
+     <title>Pixtory Game | Privacy Policy</title>
+     <description>Pixtory Game | Privacy Policy</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>1</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+<item>
+     <link>https://pixtorygame.github.io/about.html</link>
+     <title>Pixtory Game | About Us</title>
+     <description>Pixtory Game | About Us</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>1</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+<item>
+     <link>https://pixtorygame.github.io/wordup.html</link>
+     <title>Pixtory Game | Word Up Crossword Game</title>
+     <description>Pixtory Game | Word Up Crossword Game</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>1</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+<item>
+     <link>https://pixtorygame.github.io/pixtory.html</link>
+     <title>Pixtory Game | Pixtory Picture Word Puzzle Game</title>
+     <description>Pixtory Game | Pixtory Picture Word Puzzle Game</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>1</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+<item>
+     <link>https://pixtorygame.github.io/fibonacci.html</link>
+     <title>Pixtory Game | Fibonacci Number Puzzle Game</title>
+     <description>Pixtory Game | Fibonacci Number Puzzle Game</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>1</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+<item>
+     <link>https://pixtorygame.github.io/letterring.html</link>
+     <title>Pixtory Game | Letter Ring Puzzle Game</title>
+     <description>Pixtory Game | Letter Ring Puzzle Game</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>1</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+<item>
+     <link>https://pixtorygame.github.io/abacus.html</link>
+     <title>Pixtory Game | Abacus Math Puzzle Game</title>
+     <description>Pixtory Game | Abacus Math Puzzle Game</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>1</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+</channel>
+</rss>
+  

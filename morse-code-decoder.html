@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morse Code Signal Decoder (Auto, Live & File Modes)</title>
+    <style>
+        :root {
+            --bg-color: #121824;
+            --card-bg: #1e293b;
+            --accent-color: #3b82f6;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --border-color: #334155;
+            --morse-color: #60a5fa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 24px;
+            text-align: center;
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        /* --- Ana Sekmeler (Main Mode Tabs) --- */
+        .main-mode-tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .main-tab-btn {
+            flex: 1;
+            text-align: center;
+            background: #121824;
+            color: var(--text-sub);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .main-tab-btn.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .main-tab-pane {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .main-tab-pane.active {
+            display: flex;
+        }
+
+        /* --- Bilgilendirme Mesajı --- */
+        .mode-info-banner {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            line-height: 1.4;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .mode-info-banner .info-icon {
+            flex-shrink: 0;
+        }
+
+        /* --- Açılır-Kapanır Settings Paneli --- */
+        .calibration-wrapper {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .calibration-toggle-btn {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.8);
+            color: #38bdf8;
+            border: none;
+            padding: 12px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .calibration-toggle-btn:hover {
+            background: rgba(51, 65, 85, 0.8);
+            color: #f8fafc;
+        }
+
+        .calibration-content {
+            display: none;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .calibration-content.open {
+            display: flex;
+        }
+
+        .settings-top-desc {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            text-align: left;
+            line-height: 1.4;
+            padding-left: 4px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+        }
+
+        .control-group label span {
+            color: #38bdf8;
+            font-weight: bold;
+        }
+
+        .reset-text-btn {
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            font-size: 0.75rem;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 2px 4px;
+            transition: color 0.2s;
+        }
+
+        .reset-text-btn:hover {
+            color: #60a5fa;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        input[type="range"]:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-top: 6px;
+            cursor: pointer;
+        }
+
+        .checkbox-group input {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        .calibration-section-title {
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-top: 5px;
+            margin-bottom: -5px;
+        }
+
+        /* --- Ses Seviyesi Göstergesi --- */
+        .meter-container {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .meter-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        .meter-label-row span {
+            color: #38bdf8;
+            font-weight: bold;
+        }
+
+        .meter-bar-bg {
+            width: 100%;
+            height: 12px;
+            background-color: #0f172a;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .meter-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3b82f6, #10b981, #ef4444);
+            transition: width 0.05s ease-out;
+        }
+
+        .threshold-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #fbbf24;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Ortak Bileşenler */
+        .vertical-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .file-info-text {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            text-align: center;
+            word-break: break-all;
+            min-height: 20px;
+        }
+
+        .calib-btn-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 20px;
+            margin-top: 14px;
+        }
+
+        .btn-calibrate {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            outline: none;
+        }
+
+        .btn-calibrate:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .calibrating .btn-calibrate {
+            background-color: #ef4444;
+        }
+
+        .btn-calibrate:disabled {
+            background-color: #334155 !important;
+            color: #64748b !important;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .actions-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .mic-btn-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 30px;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            outline: none;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn-file {
+            background-color: #475569;
+        }
+
+        .btn-file:hover {
+            background-color: #64748b;
+        }
+
+        .btn-play {
+            background-color: #10b981;
+        }
+
+        .btn-play:hover {
+            background-color: #059669;
+        }
+
+        .btn:disabled {
+            background-color: #334155 !important;
+            color: #64748b !important;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .listening .btn-mic {
+            background-color: #ef4444;
+        }
+
+        .pulse-ring {
+            display: none;
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 36px;
+            border: 3px solid #ef4444;
+            animation: pulse 1.5s infinite ease-out;
+            pointer-events: none;
+        }
+
+        .listening .pulse-ring,
+        .calibrating .pulse-ring {
+            display: block;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.12); opacity: 0; }
+        }
+
+        /* Çıktı Bölümleri ve Başlıkları */
+        .section-block {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            padding-left: 4px;
+        }
+
+        /* Varsayılan olarak sola yanaşık (animasyon sırasında) */
+        .live-morse-display {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 85px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; 
+        }
+
+        /* Sinyaller gelmeye başladığında ortalanır */
+        .live-morse-display.centered {
+            justify-content: center;
+        }
+
+        .signal-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-height: 36px;
+            flex-wrap: wrap;
+        }
+
+        .morse-dot {
+            width: 24px;
+            height: 24px;
+            background-color: var(--morse-color);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px rgba(96, 165, 250, 0.4);
+        }
+
+        .morse-dash {
+            width: 64px;
+            height: 24px;
+            background-color: var(--morse-color);
+            border-radius: 12px;
+            display: inline-block;
+            box-shadow: 0 0 10px rgba(96, 165, 250, 0.4);
+        }
+
+        .display-area {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+        }
+
+        .display-header {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: -5px;
+        }
+
+        .icon-btn {
+            background: rgba(51, 65, 85, 0.6);
+            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .icon-btn.delete-btn:hover {
+            background-color: #ef4444;
+            border-color: #ef4444;
+        }
+
+        /* Standart metin akışı ve doğru satır sonu hizalaması için güncellendi */
+        .text-output {
+            font-size: 1.5rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            min-height: 50px;
+            color: #f8fafc;
+            word-break: break-all;
+            display: block;
+            line-height: 1.5;
+        }
+
+        /* Canlı Placeholder Stili (Inline akış, satır taşıması engellendi) */
+        .decoding-placeholder {
+            color: rgba(148, 163, 184, 0.4);
+            display: inline;
+            /*
+            animation: placeholderFlicker 0.4s infinite alternate;
+            */
+            margin-left: 1px;
+        }
+
+        @keyframes placeholderFlicker {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.7; }
+        }
+
+        /* --- Radyo / Sinyal Yayın Simgesi ve Dalgalanan 3 Nokta Animasyonu --- */
+        .listening-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: rgba(248, 250, 252, 0.5);
+            user-select: none;
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        .listening-radio-icon {
+            width: 32px;  
+            height: 32px; 
+            color: rgba(96, 165, 250, 0.85);
+            animation: radioGlow 1.6s infinite ease-in-out;
+            flex-shrink: 0;
+        }
+
+        @keyframes radioGlow {
+            0%, 100% { opacity: 0.45; transform: scale(0.92); }
+            50% { opacity: 1; transform: scale(1.08); }
+        }
+
+        .listening-dots {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 2px;
+        }
+
+        .listening-dots span {
+            display: inline-block;
+            animation: dotWave 1.4s infinite ease-in-out both;
+        }
+
+        .listening-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .listening-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .listening-dots span:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes dotWave {
+            0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+            40% { transform: translateY(-5px); opacity: 1; }
+        }
+
+        .status-bar {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+            .actions-container {
+                flex-direction: column;
+                width: 100%;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .mic-btn-wrapper {
+                width: 100%;
+            }
+            .main-mode-tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Morse Code Decoder</h1>
+
+    <div class="main-mode-tabs">
+        <button class="main-tab-btn active" data-main-tab="autoTabPane">From Mic (Live Auto)</button>
+        <button class="main-tab-btn" data-main-tab="liveTabPane">From Mic (Live)</button>
+        <button class="main-tab-btn" data-main-tab="fileTabPane">From File (Playback)</button>
+    </div>
+
+    <div class="main-tab-pane active" id="autoTabPane">
+        <div class="mode-info-banner">
+            <span class="info-icon">⚡</span>
+            <span>Zero configuration required! Press the button below. The system auto-calibrates for 5s (buffering incoming audio silently), decodes the buffered input upon completion, and seamlessly transitions to live listening.</span>
+        </div>
+
+        <div class="actions-container" style="margin-top: 10px;">
+            <div class="mic-btn-wrapper" id="autoMicWrapper">
+                <div class="pulse-ring"></div>
+                <button class="btn btn-mic" id="autoMicBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    <span id="autoMicBtnText">Start Auto Listening</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-tab-pane" id="liveTabPane">
+        <div class="mode-info-banner">
+            <span class="info-icon">💡</span>
+            <span>For accurate decoding from different audio sources, make sure to adjust the tone and speed settings or use automatic calibration.</span>
+        </div>
+
+        <div class="calibration-wrapper">
+            <button class="calibration-toggle-btn" id="calibToggleBtn">
+                <span>⚙️ Settings & Calibration</span>
+                <span id="toggleArrow">▼</span>
+            </button>
+            <div class="calibration-content" id="calibContent">
+                <div class="settings-top-desc">
+                    Set Tone, Speed & Threshold manually or use automatic calibration from microphone.
+                </div>
+
+                <div class="settings-grid">
+                    <div class="control-group">
+                        <div class="control-header">
+                            <label for="freqRange">Tone: <span id="freqVal">600 Hz</span></label>
+                            <button class="reset-text-btn" id="resetFreqBtn">Reset</button>
+                        </div>
+                        <input type="range" id="freqRange" min="400" max="1000" value="600" step="10">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-header">
+                            <label for="wpmRange">Speed: <span id="wpmVal">15 WPM</span></label>
+                            <button class="reset-text-btn" id="resetWpmBtn">Reset</button>
+                        </div>
+                        <input type="range" id="wpmRange" min="5" max="40" value="15" step="1">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-header">
+                            <label for="thresholdRange">Threshold: <span id="thresholdVal">0.012</span></label>
+                            <button class="reset-text-btn" id="resetThresholdBtn">Reset</button>
+                        </div>
+                        <input type="range" id="thresholdRange" min="0.002" max="0.050" value="0.012" step="0.001">
+                        
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="adaptiveThresholdCheck" checked> Adaptive Threshold (Auto)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="calibration-section-title">Automatic Calibration</div>
+
+                <div style="display: flex; flex-direction: column; gap: 6px; width: 100%; align-items: center; text-align: center;">
+                    <div style="display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 300px; text-align: left;">
+                        <label for="calibDurationRange" style="font-size: 0.85rem; color: var(--text-sub);">Calibration Duration: <span id="calibDurationVal" style="color: #38bdf8; font-weight: bold;">5 s</span></label>
+                        <input type="range" id="calibDurationRange" min="3" max="20" value="5" step="1">
+                    </div>
+                    <div class="calib-btn-wrapper" id="calibWrapper">
+                        <div class="pulse-ring"></div>
+                        <button class="btn-calibrate" id="calibrateMicBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                            <span id="calibBtnText">Start Calibration</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions-container" style="margin-top: 10px;">
+            <div class="mic-btn-wrapper" id="micWrapper">
+                <div class="pulse-ring"></div>
+                <button class="btn btn-mic" id="micBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    <span id="micBtnText">Start Live Listening</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-tab-pane" id="fileTabPane">
+        <div class="vertical-group" style="padding: 10px 0;">
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-file" id="fileBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Upload File
+                </button>
+                <button class="btn btn-play" id="playFileBtn" disabled>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    Play & Decode
+                </button>
+            </div>
+            <div class="file-info-text" id="playbackFileInfo">No playback file selected</div>
+            <input type="file" id="wavInput" accept=".wav,.mp3,.m4a,.ogg,.flac,.aac,.webm,audio/*">
+        </div>
+    </div>
+
+    <div style="margin-top: 15px;"></div>
+
+    <div class="meter-container">
+        <div class="meter-label-row">
+            <span>Live Goertzel Magnitude</span>
+            <span id="levelValue">0.00 (Threshold: 0.012)</span>
+        </div>
+        <div class="meter-bar-bg">
+            <div class="threshold-line" id="thresholdMarker" style="left: 12%;"></div>
+            <div class="meter-bar-fill" id="meterFill"></div>
+        </div>
+    </div>
+
+    <div class="section-block">
+        <div class="section-title">Decoded Morse Code</div>
+        <div class="live-morse-display" id="liveMorseContainer">
+            <div class="signal-indicator" id="signalDisplay"></div>
+        </div>
+    </div>
+
+    <div class="section-block">
+        <div class="section-title">Decoded Text</div>
+        <div class="display-area">
+            <div class="display-header">
+                <button class="icon-btn" id="copyBtn" title="Copy Text">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+                <button class="icon-btn delete-btn" id="clearBtn" title="Clear Output">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            </div>
+            <div class="text-output" id="textDisplay"></div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span id="statusText">Status: Ready</span>
+        <span id="timingInfo">Dot: 80ms | Dash: 240ms</span>
+    </div>
+</div>
+
+<script>
+    const MORSE_MAP = {
+        ".-": "A", "-...": "B", "-.-.": "C", "-..": "D", ".": "E",
+        "..-.": "F", "--.": "G", "....": "H", "..": "I", ".---": "J",
+        "-.-": "K", ".-..": "L", "--": "M", "-.": "N", "---": "O",
+        ".--.": "P", "--.-": "Q", ".-.": "R", "...": "S", "-": "T",
+        "..-": "U", "...-": "V", ".--": "W", "-..-": "X", "-.--": "Y",
+        "--..": "Z", "-----": "0", ".----": "1", "..---": "2", "...--": "3",
+        "....-": "4", ".....": "5", "-....": "6", "--...": "7", "---..": "8",
+        "----.": "9", ".-.-.-": ".", "--..--": ",", "..--..": "?", ".----.": "'", 
+        "-.-.--": "!", "-..-.": "/", ".--.-.": "@"
+    };
+
+    const ALL_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    // --- DOM Referansları ---
+    const mainTabButtons = document.querySelectorAll('.main-tab-btn');
+    const mainTabPanes = document.querySelectorAll('.main-tab-pane');
+
+    const autoMicBtn = document.getElementById('autoMicBtn');
+    const autoMicBtnText = document.getElementById('autoMicBtnText');
+    const autoMicWrapper = document.getElementById('autoMicWrapper');
+
+    const freqRange = document.getElementById('freqRange');
+    const wpmRange = document.getElementById('wpmRange');
+    const thresholdRange = document.getElementById('thresholdRange');
+    const adaptiveThresholdCheck = document.getElementById('adaptiveThresholdCheck');
+
+    const freqVal = document.getElementById('freqVal');
+    const wpmVal = document.getElementById('wpmVal');
+    const thresholdVal = document.getElementById('thresholdVal');
+
+    const resetFreqBtn = document.getElementById('resetFreqBtn');
+    const resetWpmBtn = document.getElementById('resetWpmBtn');
+    const resetThresholdBtn = document.getElementById('resetThresholdBtn');
+    
+    const calibDurationRange = document.getElementById('calibDurationRange');
+    const calibDurationVal = document.getElementById('calibDurationVal');
+    const calibrateMicBtn = document.getElementById('calibrateMicBtn');
+    const calibBtnText = document.getElementById('calibBtnText');
+    const calibWrapper = document.getElementById('calibWrapper');
+
+    const micBtn = document.getElementById('micBtn');
+    const micBtnText = document.getElementById('micBtnText');
+    const micWrapper = document.getElementById('micWrapper');
+    
+    const fileBtn = document.getElementById('fileBtn');
+    const playFileBtn = document.getElementById('playFileBtn');
+    const wavInput = document.getElementById('wavInput');
+    const playbackFileInfo = document.getElementById('playbackFileInfo');
+
+    const signalDisplay = document.getElementById('signalDisplay');
+    const liveMorseContainer = document.getElementById('liveMorseContainer');
+    const textDisplay = document.getElementById('textDisplay');
+    const statusText = document.getElementById('statusText');
+    const timingInfo = document.getElementById('timingInfo');
+    
+    const copyBtn = document.getElementById('copyBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    const meterFill = document.getElementById('meterFill');
+    const levelValue = document.getElementById('levelValue');
+    const thresholdMarker = document.getElementById('thresholdMarker');
+
+    // --- LocalStorage İşlemleri ---
+    function saveSettings() {
+        localStorage.setItem('morse_target_freq', freqRange.value);
+        localStorage.setItem('morse_wpm', wpmRange.value);
+        localStorage.setItem('morse_threshold', thresholdRange.value);
+        localStorage.setItem('morse_adaptive', adaptiveThresholdCheck.checked);
+    }
+
+    function loadSettings() {
+        const savedFreq = localStorage.getItem('morse_target_freq');
+        const savedWpm = localStorage.getItem('morse_wpm');
+        const savedThreshold = localStorage.getItem('morse_threshold');
+        const savedAdaptive = localStorage.getItem('morse_adaptive');
+
+        if (savedFreq !== null) {
+            freqRange.value = savedFreq;
+            freqVal.textContent = `${savedFreq} Hz`;
+        }
+        if (savedWpm !== null) {
+            wpmRange.value = savedWpm;
+            wpmVal.textContent = `${savedWpm} WPM`;
+        }
+        if (savedThreshold !== null) {
+            thresholdRange.value = savedThreshold;
+            LIVE_THRESHOLD = parseFloat(savedThreshold);
+            thresholdVal.textContent = LIVE_THRESHOLD.toFixed(3);
+        }
+        
+        if (savedAdaptive !== null) {
+            adaptiveThresholdCheck.checked = (savedAdaptive === 'true');
+        } else {
+            adaptiveThresholdCheck.checked = true;
+        }
+        thresholdRange.disabled = adaptiveThresholdCheck.checked;
+    }
+
+    // --- Ana Sekmeler Arası Geçiş ---
+    mainTabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (isAutoListening) stopAutoListening();
+            if (isListening) stopListening();
+            if (isPlayingFile) stopFilePlayback();
+
+            mainTabButtons.forEach(b => b.classList.remove('active'));
+            mainTabPanes.forEach(p => p.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById(btn.getAttribute('data-main-tab')).classList.add('active');
+        });
+    });
+
+    // --- Settings Panel Toggle ---
+    const calibToggleBtn = document.getElementById('calibToggleBtn');
+    const calibContent = document.getElementById('calibContent');
+    const toggleArrow = document.getElementById('toggleArrow');
+
+    calibToggleBtn.addEventListener('click', () => {
+        const isOpen = calibContent.classList.toggle('open');
+        toggleArrow.textContent = isOpen ? '▲' : '▼';
+    });
+
+    let audioCtx = null;
+    let micStream = null;
+    let analyserNode = null;
+    let isListening = false;
+    let animFrameId = null;
+
+    let isAutoListening = false;
+    let autoAnimFrameId = null;
+    let autoTargetFreq = 600;
+    let autoWpm = 15;
+    let autoDotDuration = 1200 / 15;
+    let audioBufferQueue = []; 
+
+    let loadedAudioBuffer = null;          
+    let activeFileSource = null;
+    let isPlayingFile = false;
+    let fileAnimFrameId = null;
+
+    let fileSpecificFreq = 600;
+    let fileSpecificWpm = 15;
+
+    let isCalibrating = false;
+    let calibrationCanceled = false;
+
+    let dotDuration = 1200 / 15;
+    let isToneActive = false;
+    let lastStateChangeTime = 0;
+    let currentSymbolBuffer = "";
+    let decodedText = "";
+    let hasReceivedFirstChar = false; 
+    let placeholderInterval = null;
+
+    let LIVE_THRESHOLD = 0.012;
+    let dynamicPeak = 0.01;
+
+    loadSettings();
+
+    function updateThresholdVisual() {
+        const markerPercent = (Math.min(LIVE_THRESHOLD, 0.1) / 0.1) * 100;
+        thresholdMarker.style.left = `${markerPercent}%`;
+    }
+    updateThresholdVisual();
+
+    function updateTimings() {
+        const wpm = parseInt(wpmRange.value, 10);
+        dotDuration = 1200 / wpm;
+        timingInfo.textContent = `Dot: ${Math.round(dotDuration)}ms | Dash: ${Math.round(dotDuration * 3)}ms`;
+    }
+    updateTimings();
+
+    freqRange.addEventListener('input', (e) => {
+        freqVal.textContent = `${e.target.value} Hz`;
+        saveSettings();
+    });
+
+    wpmRange.addEventListener('input', (e) => {
+        wpmVal.textContent = `${e.target.value} WPM`;
+        updateTimings();
+        saveSettings();
+    });
+
+    thresholdRange.addEventListener('input', (e) => {
+        LIVE_THRESHOLD = parseFloat(e.target.value);
+        thresholdVal.textContent = LIVE_THRESHOLD.toFixed(3);
+        updateThresholdVisual();
+        saveSettings();
+    });
+
+    adaptiveThresholdCheck.addEventListener('change', () => {
+        thresholdRange.disabled = adaptiveThresholdCheck.checked;
+        saveSettings();
+    });
+
+    calibDurationRange.addEventListener('input', (e) => {
+        calibDurationVal.textContent = `${e.target.value} s`;
+    });
+
+    resetFreqBtn.addEventListener('click', () => {
+        freqRange.value = 600;
+        freqVal.textContent = "600 Hz";
+        saveSettings();
+    });
+
+    resetWpmBtn.addEventListener('click', () => {
+        wpmRange.value = 15;
+        wpmVal.textContent = "15 WPM";
+        updateTimings();
+        saveSettings();
+    });
+
+    resetThresholdBtn.addEventListener('click', () => {
+        thresholdRange.value = 0.012;
+        LIVE_THRESHOLD = 0.012;
+        thresholdVal.textContent = "0.012";
+        updateThresholdVisual();
+        saveSettings();
+    });
+
+    copyBtn.addEventListener('click', () => {
+        if (!decodedText) return;
+        navigator.clipboard.writeText(decodedText).then(() => {
+            const originalTitle = copyBtn.title;
+            copyBtn.title = "Copied!";
+            setTimeout(() => copyBtn.title = originalTitle, 1500);
+        });
+    });
+
+    clearBtn.addEventListener('click', () => {
+        decodedText = "";
+        currentSymbolBuffer = "";
+        stopPlaceholderLoop();
+        textDisplay.textContent = "";
+        renderSignalDisplay();
+    });
+
+    function renderSignalDisplay() {
+        let html = "";
+        for (let char of currentSymbolBuffer) {
+            if (char === ".") {
+                html += '<span class="morse-dot"></span>';
+            } else if (char === "-") {
+                html += '<span class="morse-dash"></span>';
+            }
+        }
+        signalDisplay.innerHTML = html;
+    }
+
+    function showListeningAnimation() {
+        liveMorseContainer.classList.remove('centered');
+        const indicatorHtml = `
+            <div class="listening-indicator" title="Listening and waiting for signals...">
+                <svg class="listening-radio-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
+                    <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.4"></path>
+                    <circle cx="12" cy="12" r="2"></circle>
+                    <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.4"></path>
+                    <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"></path>
+                </svg>
+                <span class="listening-dots"><span>.</span><span>.</span><span>.</span></span>
+            </div>
+        `;
+        textDisplay.innerHTML = indicatorHtml;
+        signalDisplay.innerHTML = indicatorHtml;
+    }
+
+    function startPlaceholderLoop() {
+        if (placeholderInterval) return;
+        placeholderInterval = setInterval(() => {
+            const randomChar = ALL_CHARS[Math.floor(Math.random() * ALL_CHARS.length)];
+            textDisplay.innerHTML = decodedText + `<span class="decoding-placeholder">${randomChar}</span>`;
+        }, 120);
+    }
+
+    function stopPlaceholderLoop() {
+        if (placeholderInterval) {
+            clearInterval(placeholderInterval);
+            placeholderInterval = null;
+        }
+    }
+
+    const decodeCb = {
+        sym: s => {
+            if (!hasReceivedFirstChar) {
+                hasReceivedFirstChar = true;
+                liveMorseContainer.classList.add('centered'); 
+            }
+            currentSymbolBuffer += s; 
+            renderSignalDisplay(); 
+            startPlaceholderLoop(); 
+        },
+        letter: () => commitSymbol(),
+        word: () => {
+            if (decodedText.length > 0 && !decodedText.endsWith(" ")) {
+                decodedText += " ";
+                textDisplay.textContent = decodedText;
+            }
+        }
+    };
+
+    function commitSymbol() {
+        if (currentSymbolBuffer.length > 0) {
+            stopPlaceholderLoop(); 
+            const char = MORSE_MAP[currentSymbolBuffer] || "?";
+            decodedText += char;
+            textDisplay.textContent = decodedText; 
+            currentSymbolBuffer = "";
+            renderSignalDisplay();
+        }
+    }
+
+
+    // =====================================================================
+    //  DSP ÇEKİRDEĞİ
+    // =====================================================================
+    const clampT = t => Math.max(1200 / 50, Math.min(1200 / 4, t));
+
+    function estimateUnit(durs, refT) {
+        const s = durs.filter(v => v >= 15 && v <= 900).sort((a, b) => a - b);
+        if (s.length < 4) return null;
+        let c1 = s[Math.floor(s.length * 0.15)], c2 = s[Math.floor(s.length * 0.9)];
+        let n1 = 0, n2 = 0;
+        for (let it = 0; it < 20; it++) {
+            const mid = (c1 + c2) / 2;
+            let a = 0, b = 0; n1 = 0; n2 = 0;
+            for (const v of s) { if (v < mid) { a += v; n1++; } else { b += v; n2++; } }
+            if (!n1 || !n2) break;
+            c1 = a / n1; c2 = b / n2;
+        }
+        if (n1 && n2 && c2 / c1 >= 2.0 && c2 / c1 <= 4.6) {
+            return { T: (n1 * c1 + (n2 * c2) / 3) / (n1 + n2) };
+        }
+        const med = s[s.length >> 1];
+        return { T: (refT && med > 2 * refT) ? med / 3 : med, single: true };
+    }
+
+    class MorseEngine {
+        constructor(fs, freq, o = {}) {
+            this.fs = fs; this.o = o;
+            this.hop = Math.max(16, Math.round(fs * 0.004));
+            this.win = this.hop * 3;
+            this.hopMs = (this.hop / fs) * 1000;
+            this.ring = new Float32Array(this.win);
+            this.hann = new Float32Array(this.win);
+            let sw = 0;
+            for (let i = 0; i < this.win; i++) {
+                this.hann[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * (i + 0.5) / this.win);
+                sw += this.hann[i];
+            }
+            this.sw = sw;
+            const dt = this.hop / fs, k = tau => 1 - Math.exp(-dt / tau);
+            this.kA = k(0.008); this.kPd = k(6); this.kNd = k(0.2); this.kNu = k(3);
+            this.w = 0; this.cnt = 0; this.seen = 0; this.frame = 0;
+            this.T = o.T || 1200 / (o.wpm || 15);
+            this.adapt = o.adapt !== false;
+            this.tones = [];
+            this.noise = 0.0008; this.peak = 0.0008;
+            this.level = 0; this.thr = 0.005;
+            this.on = false; this.stateStart = 0; this.pend = 0; this.pendStart = 0;
+            this.letterDone = false; this.wordDone = false;
+            this.cb = {};
+            this.setFreq(freq);
+        }
+        setFreq(f) { this.freq = f; this.coeff = 2 * Math.cos(2 * Math.PI * f / this.fs); }
+        setT(t) { this.T = clampT(t); this.tones = []; }
+
+        push(x) {
+            const N = this.win, hop = this.hop;
+            for (let i = 0; i < x.length; i++) {
+                this.ring[this.w] = x[i];
+                if (++this.w === N) this.w = 0;
+                this.seen++;
+                if (++this.cnt >= hop) {
+                    this.cnt = 0;
+                    if (this.seen >= N) this._frame();
+                }
+            }
+        }
+
+        _frame() {
+            const N = this.win, c = this.coeff;
+            let a = 0, b = 0, p = this.w;
+            for (let i = 0; i < N; i++) {
+                const s = this.ring[p] * this.hann[i] + c * a - b;
+                b = a; a = s;
+                if (++p === N) p = 0;
+            }
+            const lvl = Math.sqrt(Math.max(0, a * a + b * b - c * a * b)) / this.sw;
+            this.level = lvl;
+
+            if (lvl > this.peak) this.peak += (lvl - this.peak) * this.kA;
+            else this.peak += (this.noise - this.peak) * this.kPd;
+            if (lvl < this.noise) this.noise += (lvl - this.noise) * this.kNd;
+            else if (!this.on && this.pend === 0 && this.noise < 0.4 * this.peak) this.noise += (lvl - this.noise) * this.kNu;
+
+            const fixed = this.o.fixedThr ? this.o.fixedThr() : null;
+            let thOn, thOff;
+            if (fixed) { thOn = fixed; thOff = fixed * 0.8; }
+            else if (this.peak < Math.max(0.0005, this.noise * 3)) { thOn = thOff = Infinity; }
+            else {
+                const span = this.peak - this.noise;
+                thOn = this.noise + span * 0.5;
+                thOff = this.noise + span * 0.38;
+            }
+            this.thr = isFinite(thOn) ? thOn : 0.005;
+
+            const want = this.on ? (lvl > thOff) : (lvl > thOn);
+            if (want !== this.on) {
+                if (++this.pend === 1) this.pendStart = this.frame;
+                if (this.pend >= 3) this._toggle(this.pendStart);
+            } else {
+                this.pend = 0;
+            }
+
+            if (!this.on) {
+                const end = this.pend > 0 ? this.pendStart : this.frame;
+                const sil = (end - this.stateStart) * this.hopMs;
+                if (!this.letterDone && sil >= 2.1 * this.T) { this.letterDone = true; this.cb.letter && this.cb.letter(); }
+                if (!this.wordDone && sil >= 5 * this.T) { this.wordDone = true; this.cb.word && this.cb.word(); }
+            }
+            this.frame++;
+        }
+
+        _toggle(at) {
+            const ms = (at - this.stateStart) * this.hopMs;
+            if (this.on) this._tone(ms);
+            this.on = !this.on;
+            this.stateStart = at;
+            this.pend = 0;
+            if (this.on) { this.letterDone = false; this.wordDone = false; }
+        }
+
+        _tone(ms) {
+            this.cb.tone && this.cb.tone(ms);
+            this.cb.sym && this.cb.sym(ms < 2 * this.T ? '.' : '-');
+            this.tones.push(ms);
+            if (this.tones.length > 48) this.tones.shift();
+            if (this.adapt && this.tones.length >= 6) {
+                const e = estimateUnit(this.tones, this.T);
+                if (e) {
+                    const nt = clampT(e.T), g = e.single ? 0.2 : 0.4;
+                    this.T = this.T * (1 - g) + nt * g;
+                }
+            }
+        }
+
+        flush() {
+            if (this.on) this._toggle(this.frame);
+            this.cb.letter && this.cb.letter();
+        }
+    }
+
+    function concatChunks(ch) {
+        let n = 0; for (const c of ch) n += c.length;
+        const o = new Float32Array(n); let p = 0;
+        for (const c of ch) { o.set(c, p); p += c.length; }
+        return o;
+    }
+
+    function estimateFreq(x, fs, lo = 400, hi = 1000) {
+        const N = Math.round(fs * 0.04), nf = Math.floor(x.length / N);
+        if (nf < 8) return null;
+        const en = new Float64Array(nf);
+        for (let f = 0; f < nf; f++) { let s = 0; for (let i = f * N, e = i + N; i < e; i++) s += x[i] * x[i]; en[f] = s; }
+        const thr = Array.from(en).sort((a, b) => a - b)[Math.floor(nf * 0.75)];
+        if (!(thr > 1e-9)) return null;
+        const step = 5, K = Math.floor((hi - lo) / step) + 1;
+        const co = new Float64Array(K), P = new Float64Array(K);
+        for (let k = 0; k < K; k++) co[k] = 2 * Math.cos(2 * Math.PI * (lo + k * step) / fs);
+        for (let f = 0; f < nf; f++) {
+            if (en[f] < thr) continue;
+            const off = f * N;
+            for (let k = 0; k < K; k++) {
+                const c = co[k]; let a = 0, b = 0;
+                for (let i = 0; i < N; i++) { const s = x[off + i] + c * a - b; b = a; a = s; }
+                P[k] += a * a + b * b - c * a * b;
+            }
+        }
+        let km = 0; for (let k = 1; k < K; k++) if (P[k] > P[km]) km = k;
+        const med = Array.from(P).sort((a, b) => a - b)[K >> 1];
+        if (!(P[km] > 6 * med)) return null;
+        let d = 0;
+        if (km > 0 && km < K - 1) {
+            const y0 = P[km - 1], y1 = P[km], y2 = P[km + 1], den = y0 - 2 * y1 + y2;
+            if (den < 0) d = Math.max(-1, Math.min(1, 0.5 * (y0 - y2) / den));
+        }
+        return lo + (km + d) * step;
+    }
+
+    function analyzeSignal(x, fs, freq, refT) {
+        const eng = new MorseEngine(fs, freq, { adapt: false });
+        const tones = [];
+        eng.cb.tone = d => tones.push(d);
+        eng.push(x);
+        const est = estimateUnit(tones, refT);
+        return { T: est ? clampT(est.T) : null, count: tones.length };
+    }
+
+    // Kalibrasyon buffer'ından SABİT eşik hesapla: Goertzel seviyelerini 2-means ile
+    // sessizlik/ton kümelerine ayır, eşiği ton kümesinin biraz altına koy. Canlı akış
+    // boyunca sabit kalır → sarı çizgi oynamaz (adaptif eşiğin oynamasını önler).
+    function calcFixedThreshold(x, fs, freq) {
+        const hop = Math.max(16, Math.round(fs * 0.004)), win = hop * 3;
+        const hann = new Float32Array(win);
+        let sw = 0;
+        for (let i = 0; i < win; i++) { hann[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * (i + 0.5) / win); sw += hann[i]; }
+        const coeff = 2 * Math.cos(2 * Math.PI * freq / fs);
+        const ring = new Float32Array(win);
+        const lv = [];
+        let w = 0, cnt = 0, seen = 0;
+        for (let n = 0; n < x.length; n++) {
+            ring[w] = x[n]; if (++w === win) w = 0; seen++;
+            if (++cnt >= hop) {
+                cnt = 0;
+                if (seen >= win) {
+                    let a = 0, b = 0, p = w;
+                    for (let i = 0; i < win; i++) { const s = ring[p] * hann[i] + coeff * a - b; b = a; a = s; if (++p === win) p = 0; }
+                    lv.push(Math.sqrt(Math.max(0, a * a + b * b - coeff * a * b)) / sw);
+                }
+            }
+        }
+        const s = lv.filter(v => v > 0).sort((p, q) => p - q);
+        if (s.length < 10) return null;
+        let lo = s[Math.floor(s.length * 0.1)], hi = s[Math.floor(s.length * 0.9)];
+        for (let it = 0; it < 20; it++) {
+            const mid = (lo + hi) / 2; let sa = 0, na = 0, sb = 0, nb = 0;
+            for (const v of s) { if (v < mid) { sa += v; na++; } else { sb += v; nb++; } }
+            if (!na || !nb) break; lo = sa / na; hi = sb / nb;
+        }
+        if (!(hi > lo * 1.5)) return null;               // ton/sessizlik yeterince ayrışmadıysa sabit eşik kullanma
+        return lo + (hi - lo) * 0.45;                    // ton kümesinin biraz altı
+    }
+
+    let capStop = null, autoChunks = [], autoEngine = null, liveEngine = null, calibResolve = null;
+    let meterEngine = null, meterRaf = 0;
+
+    async function openMicSession() {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+        micStream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 },
+            video: false
+        });
+    }
+
+    async function startCapture(ctx, stream, onBlock) {
+        const src = ctx.createMediaStreamSource(stream);
+        const mute = ctx.createGain(); mute.gain.value = 0; mute.connect(ctx.destination);
+        let node;
+        try {
+            if (!ctx.audioWorklet) throw new Error("no worklet");
+            const code = "class P extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(1024);this.n=0;}" +
+                "process(i){const c=i[0]&&i[0][0];if(c){for(let k=0;k<c.length;k++){this.b[this.n++]=c[k];" +
+                "if(this.n===1024){this.port.postMessage(this.b.slice(0));this.n=0;}}}return true;}}registerProcessor('morse-cap',P);";
+            const url = URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
+            await ctx.audioWorklet.addModule(url);
+            URL.revokeObjectURL(url);
+            node = new AudioWorkletNode(ctx, 'morse-cap', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [1] });
+            node.port.onmessage = e => onBlock(e.data);
+        } catch (e) {
+            node = ctx.createScriptProcessor(2048, 1, 1);
+            node.onaudioprocess = e => onBlock(e.inputBuffer.getChannelData(0));
+        }
+        src.connect(node); node.connect(mute);
+        return () => {
+            try { src.disconnect(); node.disconnect(); } catch (_) {}
+            if (node.port) node.port.onmessage = null; else node.onaudioprocess = null;
+        };
+    }
+
+    function stopCapture() {
+        if (capStop) { capStop(); capStop = null; }
+        stopMeter();
+        if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+        if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
+    }
+
+    function meterLoop() {
+        const e = meterEngine;
+        if (!e) return;
+        const th = Math.min(e.thr, 0.1);
+        meterFill.style.width = `${Math.min(100, (e.level / 0.1) * 100)}%`;
+        thresholdMarker.style.left = `${(th / 0.1) * 100}%`;
+        levelValue.textContent = `${e.level.toFixed(3)} (Th: ${th.toFixed(3)})`;
+        timingInfo.textContent = `Dot: ${Math.round(e.T)}ms | Dash: ${Math.round(e.T * 3)}ms (~${Math.round(1200 / e.T)} WPM)`;
+        if (e.live && adaptiveThresholdCheck.checked) {
+            LIVE_THRESHOLD = th;
+            thresholdVal.textContent = th.toFixed(3);
+        }
+        meterRaf = requestAnimationFrame(meterLoop);
+    }
+    function startMeter(e) { meterEngine = e; cancelAnimationFrame(meterRaf); meterLoop(); }
+    function stopMeter() { meterEngine = null; cancelAnimationFrame(meterRaf); }
+
+    function resetMeterUI() {
+        meterFill.style.width = '0%';
+        levelValue.textContent = `0.00 (Threshold: ${LIVE_THRESHOLD.toFixed(3)})`;
+        updateThresholdVisual();
+        updateTimings();
+    }
+
+    function blockRms(blk) {
+        let s = 0; for (let i = 0; i < blk.length; i++) s += blk[i] * blk[i];
+        return Math.sqrt(s / blk.length);
+    }
+
+    // --- 1. FROM MIC (AUTO) ---
+    autoMicBtn.addEventListener('click', async () => {
+        if (!isAutoListening) await startAutoListening();
+        else stopAutoListening();
+    });
+
+    async function startAutoListening() {
+        try {
+            await openMicSession();
+            const fs = audioCtx.sampleRate, need = Math.round(fs * 5);
+            let got = 0, lastSec = -1;
+            autoChunks = []; autoEngine = null;
+
+            isAutoListening = true;
+            autoMicWrapper.classList.add('listening');
+            autoMicBtnText.textContent = "Stop Auto Listening";
+            
+            decodedText = ""; 
+            currentSymbolBuffer = ""; 
+            hasReceivedFirstChar = false;
+            showListeningAnimation(); 
+
+            capStop = await startCapture(audioCtx, micStream, blk => {
+                if (!isAutoListening) return;
+                if (autoEngine) { autoEngine.push(blk); return; }
+                autoChunks.push(blk); got += blk.length;
+                const rms = blockRms(blk);
+                meterFill.style.width = `${Math.min(100, (rms / 0.1) * 100)}%`;
+                levelValue.textContent = `${rms.toFixed(3)} (Auto Calibrating...)`;
+                const left = Math.max(0, Math.ceil((need - got) / fs));
+                if (left !== lastSec) { lastSec = left; statusText.textContent = `Status: Auto-calibrating & buffering mic (${left}s)...`; }
+                if (got >= need) autoEngine = finishAutoCalibration(fs);
+            });
+        } catch (err) {
+            alert("Microphone access error: " + err.message);
+            stopAutoListening();
+        }
+    }
+
+    function finishAutoCalibration(fs) {
+        const all = concatChunks(autoChunks);
+        const f = estimateFreq(all, fs, 400, 1000);
+        autoTargetFreq = f ? Math.round(f) : 600;
+        const r = analyzeSignal(all, fs, autoTargetFreq, 1200 / 15);
+        const T = r.T || 1200 / 15;
+        autoDotDuration = T;
+        autoWpm = Math.max(5, Math.min(40, Math.round(1200 / T)));
+
+        // Kalibrasyon buffer'ından sabit eşik hesapla; akış boyunca sabit kalsın.
+        const fixedThr = calcFixedThreshold(all, fs, autoTargetFreq);
+        const eng = new MorseEngine(fs, autoTargetFreq, {
+            T, adapt: false,
+            fixedThr: fixedThr ? () => fixedThr : null
+        });
+        eng.cb = decodeCb;
+        for (const c of autoChunks) eng.push(c);
+        autoChunks = [];
+        startMeter(eng);
+        const thrInfo = fixedThr ? `, Thr: ${fixedThr.toFixed(3)}` : '';
+        statusText.textContent = `Status: Auto-Listening Live (${autoTargetFreq}Hz, ~${autoWpm}WPM${thrInfo})`;
+        return eng;
+    }
+
+    function stopAutoListening() {
+        isAutoListening = false;
+        autoChunks = [];
+        if (autoEngine) { autoEngine.flush(); autoEngine = null; }
+        stopCapture();
+        stopPlaceholderLoop();
+        autoMicWrapper.classList.remove('listening');
+        autoMicBtnText.textContent = "Start Auto Listening";
+        statusText.textContent = "Status: Ready";
+        resetMeterUI();
+        commitSymbol();
+        if (!hasReceivedFirstChar) {
+            liveMorseContainer.classList.remove('centered');
+            textDisplay.textContent = "";
+            signalDisplay.innerHTML = "";
+        }
+    }
+
+    // --- MİKROFONDAN KALİBRASYON (Live sekmesi) ---
+    calibrateMicBtn.addEventListener('click', async () => {
+        if (isAutoListening) stopAutoListening();
+        if (isListening) stopListening();
+        if (isPlayingFile) stopFilePlayback();
+
+        if (isCalibrating) {
+            calibrationCanceled = true;
+            if (calibResolve) calibResolve();
+            return;
+        }
+        await runMicrophoneAdvancedCalibration(parseInt(calibDurationRange.value, 10));
+    });
+
+    async function runMicrophoneAdvancedCalibration(durationSec) {
+        try {
+            isCalibrating = true;
+            calibrationCanceled = false;
+            calibWrapper.classList.add("calibrating");
+            calibBtnText.textContent = "Stop Calibration";
+            statusText.textContent = `Status: Send steady tones (. . .) into mic (${durationSec}s)...`;
+
+            await openMicSession();
+            if (calibrationCanceled) { statusText.textContent = "Status: Ready"; return; }
+
+            const fs = audioCtx.sampleRate, need = Math.round(fs * durationSec);
+            let got = 0;
+            const chunks = [];
+            const finished = new Promise(r => { calibResolve = r; });
+            capStop = await startCapture(audioCtx, micStream, blk => {
+                if (!isCalibrating || calibrationCanceled || got >= need) return;
+                chunks.push(blk); got += blk.length;
+                const rms = blockRms(blk);
+                meterFill.style.width = `${Math.min(100, (rms / 0.1) * 100)}%`;
+                levelValue.textContent = `${rms.toFixed(3)} (Calibrating ${Math.max(0, Math.ceil((need - got) / fs))}s)`;
+                if (got >= need) calibResolve();
+            });
+            await finished;
+            if (calibrationCanceled) { statusText.textContent = "Status: Ready"; return; }
+            stopCapture();
+
+            const all = concatChunks(chunks);
+            const f = estimateFreq(all, fs, 400, 1000);
+            if (f) {
+                const rf = Math.max(400, Math.min(1000, Math.round(f / 10) * 10));
+                freqRange.value = rf;
+                freqVal.textContent = `${rf} Hz`;
+            }
+            const r = analyzeSignal(all, fs, f || parseInt(freqRange.value, 10), 1200 / parseInt(wpmRange.value, 10));
+            if (r.T) {
+                const wpm = Math.max(5, Math.min(40, Math.round(1200 / r.T)));
+                wpmRange.value = wpm;
+                wpmVal.textContent = `${wpm} WPM`;
+                updateTimings();
+                statusText.textContent = `Status: Mic Calibrated! Freq: ${freqRange.value}Hz, Speed: ${wpm}WPM (${r.count} tones)`;
+            } else {
+                statusText.textContent = f
+                    ? `Status: Freq locked to ${freqRange.value}Hz, send clearer dits for speed.`
+                    : "Status: No clear tone detected. Check mic level and try again.";
+            }
+            saveSettings();
+        } catch (err) {
+            alert("Microphone calibration error: " + err.message);
+        } finally {
+            calibResolve = null;
+            stopCapture();
+            isCalibrating = false;
+            calibWrapper.classList.remove("calibrating");
+            calibBtnText.textContent = "Start Calibration";
+            resetMeterUI();
+        }
+    }
+
+    // --- 2. MİKROFON CANLI DİNLEME ---
+    micBtn.addEventListener('click', async () => {
+        if (!isListening) await startListening();
+        else stopListening();
+    });
+
+    async function startListening() {
+        try {
+            decodedText = "";
+            currentSymbolBuffer = "";
+            hasReceivedFirstChar = false;
+            showListeningAnimation(); 
+
+            await openMicSession();
+            const fs = audioCtx.sampleRate;
+            const eng = new MorseEngine(fs, parseInt(freqRange.value, 10), {
+                wpm: parseInt(wpmRange.value, 10),
+                adapt: false,
+                fixedThr: () => adaptiveThresholdCheck.checked ? null : LIVE_THRESHOLD
+            });
+            eng.cb = decodeCb;
+            eng.live = true;
+            liveEngine = eng;
+            let lf = eng.freq, lw = parseInt(wpmRange.value, 10);
+
+            isListening = true;
+            micWrapper.classList.add('listening');
+            micBtnText.textContent = "Stop Live Listening";
+            statusText.textContent = "Status: Listening live...";
+
+            capStop = await startCapture(audioCtx, micStream, blk => {
+                if (!isListening) return;
+                const f = parseInt(freqRange.value, 10);
+                if (f !== lf) { lf = f; eng.setFreq(f); }
+                const w = parseInt(wpmRange.value, 10);
+                if (w !== lw) { lw = w; eng.setT(1200 / w); }
+                eng.push(blk);
+            });
+            startMeter(eng);
+        } catch (err) {
+            alert("Microphone access error: " + err.message);
+            stopListening();
+        }
+    }
+
+    function stopListening() {
+        isListening = false;
+        if (liveEngine) { liveEngine.flush(); liveEngine = null; }
+        stopCapture();
+        stopPlaceholderLoop();
+        micWrapper.classList.remove('listening');
+        micBtnText.textContent = "Start Live Listening";
+        statusText.textContent = "Status: Ready";
+        resetMeterUI();
+        commitSymbol();
+        if (!hasReceivedFirstChar) {
+            liveMorseContainer.classList.remove('centered');
+            textDisplay.textContent = "";
+            signalDisplay.innerHTML = "";
+        }
+    }
+
+    // --- 3. DOSYADAN OYNATMA VE ANALİZ ---
+    fileBtn.addEventListener('click', () => wavInput.click());
+
+    wavInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        playbackFileInfo.textContent = `Selected: ${file.name} (Analyzing...)`;
+        statusText.textContent = "Status: Analyzing file parameters...";
+
+        if (isAutoListening) stopAutoListening();
+        if (isListening) stopListening();
+        if (isPlayingFile) stopFilePlayback();
+
+        decodedText = "";
+        currentSymbolBuffer = "";
+        stopPlaceholderLoop();
+        textDisplay.textContent = "";
+        renderSignalDisplay();
+
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+            loadedAudioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+            tempCtx.close();
+
+            analyzeFileParameters(loadedAudioBuffer);
+
+            playFileBtn.disabled = false;
+            playbackFileInfo.textContent = `Selected: ${file.name} (Freq: ${fileSpecificFreq}Hz, Speed: ${fileSpecificWpm}WPM)`;
+            statusText.textContent = "Status: File Ready. Click 'Play & Decode'.";
+        } catch (err) {
+            alert("Error loading audio file: " + err.message);
+            playbackFileInfo.textContent = "No playback file selected";
+            statusText.textContent = "Status: Error occurred";
+        }
+        wavInput.value = "";
+    });
+
+    let fileSpecificT = 80, fileEngine = null, fileData = null, fileFed = 0, fileT0 = 0;
+
+    function analyzeFileParameters(audioBuffer) {
+        const fs = audioBuffer.sampleRate;
+        const x = audioBuffer.getChannelData(0);
+        const f = estimateFreq(x, fs, 300, 1500);
+        fileSpecificFreq = f ? Math.round(f) : 600;
+        const r = analyzeSignal(x, fs, fileSpecificFreq, 1200 / 15);
+        fileSpecificT = r.T || 1200 / 15;
+        fileSpecificWpm = Math.max(5, Math.min(40, Math.round(1200 / fileSpecificT)));
+    }
+
+    playFileBtn.addEventListener('click', () => {
+        if (!loadedAudioBuffer) return;
+        if (!isPlayingFile) startFilePlayback();
+        else stopFilePlayback();
+    });
+
+    function startFilePlayback() {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        fileData = loadedAudioBuffer.getChannelData(0);
+        fileFed = 0;
+        fileEngine = new MorseEngine(loadedAudioBuffer.sampleRate, fileSpecificFreq, { T: fileSpecificT, adapt: false });
+        fileEngine.cb = decodeCb;
+
+        activeFileSource = audioCtx.createBufferSource();
+        activeFileSource.buffer = loadedAudioBuffer;
+        activeFileSource.connect(audioCtx.destination);
+        activeFileSource.onended = () => {
+            if (!isPlayingFile) return;
+            if (fileEngine) {
+                fileEngine.push(fileData.subarray(fileFed));
+                fileFed = fileData.length;
+                fileEngine.flush();
+            }
+            stopFilePlayback();
+            statusText.textContent = "Status: File Playback Completed";
+        };
+
+        fileT0 = audioCtx.currentTime + 0.05;
+        activeFileSource.start(fileT0);
+        isPlayingFile = true;
+        playFileBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> Stop File Playback`;
+        statusText.textContent = "Status: Playing & Decoding File...";
+
+        decodedText = "";
+        currentSymbolBuffer = "";
+        hasReceivedFirstChar = false;
+        showListeningAnimation(); 
+
+        startMeter(fileEngine);
+        filePump();
+    }
+
+    function filePump() {
+        if (!isPlayingFile) return;
+        const fs = loadedAudioBuffer.sampleRate;
+        let pos = Math.floor((audioCtx.currentTime - fileT0 - (audioCtx.outputLatency || 0)) * fs);
+        pos = Math.max(0, Math.min(fileData.length, pos));
+        if (pos > fileFed && fileEngine) {
+            fileEngine.push(fileData.subarray(fileFed, pos));
+            fileFed = pos;
+        }
+        fileAnimFrameId = requestAnimationFrame(filePump);
+    }
+
+    function stopFilePlayback() {
+        if (!isPlayingFile) return;
+        isPlayingFile = false;
+        if (fileAnimFrameId) cancelAnimationFrame(fileAnimFrameId);
+        stopMeter();
+        fileEngine = null;
+        if (activeFileSource) {
+            activeFileSource.onended = null;
+            try { activeFileSource.stop(); } catch (e) {}
+            activeFileSource.disconnect();
+            activeFileSource = null;
+        }
+        if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
+
+        playFileBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Play & Decode`;
+        statusText.textContent = "Status: Ready";
+        resetMeterUI();
+        stopPlaceholderLoop();
+        commitSymbol();
+        if (!hasReceivedFirstChar) {
+            liveMorseContainer.classList.remove('centered');
+            textDisplay.textContent = "";
+            signalDisplay.innerHTML = "";
+        }
+    }
+</script>
+
+</body>
+</html>
